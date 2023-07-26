@@ -1,0 +1,221 @@
+---
+title: 'MA318 computer based R test answer template'
+author: "-- Postgraduate Version"
+date: ""
+output:
+  word_document: default
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+Please read the following instructions carefully before start answering the questions:
+
+• Please answer ALL TWO questions and Upload your Rmarkdown and output files to FASER.
+
+• There are 100 marks in total
+
+• Please write your code and comments in the R markdown template (.rmd) and save it as "MA318_registrationnum". For example, if your registration number is 2000999, then save your file as MA318_2000999.rmd. After you have done all your questions, you should knit your R markdown to produce either .html or .doc or .pdf file, the name should be the same as your rmarkdown file.
+
+
+\newpage
+
+## Q1 Solution:
+
+1) Read the "result.csv" file in R, show the first 6 entries of the dataset. 
+```{r, eval=TRUE}
+library(boot)
+
+# Q1 1) 
+result<-read.csv("result.csv")
+head(result)
+
+
+
+```
+
+Your comments: There are 420 observations and 3 variables.
+
+
+
+
+2) Conduct a cross-validation on the data set by doing the following steps:
+
+(i) Using the last three digits of your registration number as the random seed, split the data set into training and test set. Your training set should contain 300 randomly selected observations from the data set.
+```{r, eval=TRUE}
+# Q1 2) (i) 
+set.seed(511)
+train.index=sample(x=420,size=300)
+result.train=result[train.index, ]
+result.test=result[-train.index, ]
+
+
+```
+
+
+
+(ii) Taking "pass" as the response variable and all other columns as features, fit a logistic regression model on the training set. Comments on which variables are statistically significant associated with "pass" under 5 percent significance level (0.05) and explain the meaning of coefficient of "numresit" in terms of odds ratio.
+```{r, eval=TRUE}
+# Q1 2) (ii)
+fit1<-glm(pass~.,family=binomial(link="logit"),data=result.train)
+summary(fit1)
+b.logit=coefficients(fit1)
+b.logit
+est=exp(b.logit)
+est
+
+```
+
+Your comments: The numresit is the only variable that statistically significant under 5 percent significance level. Every unit increase of a number the student had taken resit the exam is associated with reducing 0.499 times odds of passing.
+
+
+
+
+
+(iii) Define a cost function to compute the classification error rate for the cross-validation pipeline. Use 0.5 as the prediction threshold, i.e. classify as "pass" if the predicted probability is > 0.5. Use the defined cost function to compute the 10-fold cross-validation error of your model on the training set. Report the cross-validation error on training set. 
+```{r, eval=TRUE}
+# Q1 2) (iii) 
+#define cost function
+error.rate.cost = function(y,prediction)
+{
+  predict.tf=prediction>0.5
+  error.rate=mean(predict.tf!=y)
+  return(error.rate)
+}
+#calculate the error
+cv.error=cv.glm(data=result.train,glmfit=fit1,cost=error.rate.cost,K=10)
+error=cv.error$delta[1]
+error
+
+
+```
+
+Your comments: The error is 0.22.
+
+
+
+3) Using the fitted model in 2), make predictions using 0.5 threshold respectively on the test set and compute and report the test classification error rate. Note that the "pass" column takes directly values of 0 and 1.
+```{r, eval=TRUE}
+# Q1 3) 
+predict.test=predict(object=fit1,newdata=result.test,type='response')
+tf.test=rep(0,length(predict.test))
+tf.test[predict.test>0.5]=1
+rate=mean(result.test$pass!=tf.test)
+rate
+
+```
+
+Your comments: The test classification error rate is 0.242.
+
+
+
+
+4) Using the predictions in 3) and `table()` function, create the confusion matrix on the test set. Report the number of true nagative and false positive.  
+```{r, eval=TRUE}
+# Q1 4)
+table(result.test$pass,tf.test)
+
+
+
+
+```
+
+Your comments: The true negative is 5 and the false positive is 25.
+
+
+
+
+
+## Q2 Solution
+1) Read the data "survey.csv" into R and report the sample size and the number of male interviewers and the number of female interviewers. 
+
+```{r, eval=TRUE}
+#Q2 1)
+survey<-read.csv("survey.csv")
+dim(survey)
+head(survey)
+table(survey$gender)
+```
+
+Your comments: There are 500 observations. There are 413 male interviewers and 87 female interviewers.
+
+
+2) Fit the Poisson regression model to investigate the associations of number of surveys with the size of the family and the gender of the interviewers. Print the summary of your model and identify which covariate(s) is(are) statistically significantly associated with number of accidents under 5 percent significance level (0.05). 
+
+```{r, eval=TRUE}
+#Q2 2)
+fit2<-glm(num~.,family=poisson(link="log"),data=survey)
+summary(fit2)
+
+
+
+
+```
+
+Your comments: The variables representing family sizeM,sizeS, and male interviewer are statistically significant under 5 percent significance level.
+
+
+3) Calculate the expected average number of surveys for 
+
+i) small size family interviewed by female interviewer; 
+
+ii) middle size family interviewed by female interviewer;  
+
+iii) large size family interviewed by female interviewer;  
+
+iv) small size family interviewed by male interviewer; 
+
+v) middle size family interviewed by male interviewer;  
+
+vi) large size family interviewed by male interviewer; 
+
+and report on average which combination of size and gender will give the smallest expected number of surveys.
+
+
+```{r, eval=TRUE}
+#Q2 3)
+b.pois=coefficients(fit2)
+b.pois
+#i)
+exp(b.pois[1]+b.pois[3])
+
+#ii)
+exp(b.pois[1]+b.pois[2])
+
+#iii)
+exp(b.pois[1])
+
+#iv)
+exp(b.pois[1]+b.pois[3]+b.pois[4])
+
+#v)
+exp(b.pois[1]+b.pois[2]+b.pois[4])
+
+#vi)
+exp(b.pois[1]+b.pois[4])
+
+```
+
+Your comments: The large size family interviewed by male interviewer gives the lowest expected number of surveys.
+
+
+4) Comment on if the fitted model in part 2) is significantly better than the NULL model under 5 percent significance level (0.05), based on the deviance value of the models.
+
+```{r, eval=TRUE}
+#Q2 4)
+#calculate model deviance
+694.89-201.69
+#calculate difference in degree of freedom
+499-496
+#calculate p-value
+1-pchisq(493.2,3)
+```
+
+Your comments: The fitted model is better than the null model under 5 percent significance level.
+
+
+
+
+
+
+
