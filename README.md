@@ -1,9 +1,7 @@
-22511.py
-
+**22511.py**
 The codes are from the assignment from the course ‘Introduction to Programming in Python.’  I wrote some Python functions to solve the assignment problems. The functions include for/while loops and ‘if’ statements.
 
-InitialTask.pdf
-
+**InitialTask.pdf**
 I used R to create a 3x3 matrix and find to variance-covariance matrix. Later on, I computed the principal component analysis (PCA) for this matrix and extracted the first component. Finally, I calculated the proportion of variance explained by the first two PCs (PVE). The PVE is 94.86% which means that the first two components can capture most of the information in the given dataset.
 
 K-means_anime_recommendation.ipynb
